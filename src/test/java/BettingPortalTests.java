@@ -76,33 +76,41 @@ public class BettingPortalTests {
         Assert.assertTrue(searchResultItems.size() > 0, "Поиск отработал, но не выдал ни одного результата на странице!");
     }
 
-    @Test(description = "UC-4: Сортировка рейтинга букмекеров по бонусам")
-    public void testRatingSorting() {
+    @Test(description = "UC-03: Сортировка рейтинга букмекеров")
+    public void testRatingSortingAndReset() throws InterruptedException {
         driver.get("https://tiu.ru/");
 
-        WebElement menuLink = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//a[contains(text(),'Букмекеры')]")));
-        menuLink.click();
+        wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//a[contains(text(),'Букмекеры')]"))).click();
 
-        WebElement sortedIndicator = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//button[contains(.,'По рейтингу')]")
-        ));
-        sortedIndicator.click();
+        By ratingLocator = By.xpath("//div[contains(@class, 'broker-card__rating')]//div[contains(@class, 'broker-card__detail-content')]/span");
 
-        List<WebElement> ratingElements = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
-                By.xpath("//div[contains(@class, 'broker-card__rating')]//div[contains(@class, 'broker-card__detail-content')]/span")
-        ));
+        wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[contains(.,'Все')]"))).click();
+        Thread.sleep(2000);
+        List<Double> initialRatings = getRatingsSafe(ratingLocator);
 
-        List<Double> actualRatings = new ArrayList<>();
+        driver.findElement(By.xpath("//button[contains(.,'По рейтингу')]")).click();
+        Thread.sleep(2000);
+        List<Double> sortedRatings = getRatingsSafe(ratingLocator);
+        Assert.assertNotEquals(initialRatings, sortedRatings, "Список не отсортировался!");
 
-        for (WebElement element : ratingElements) {
+        driver.findElement(By.xpath("//button[contains(.,'Все')]")).click();
+        Thread.sleep(2000);
+        List<Double> finalRatings = getRatingsSafe(ratingLocator);
+        Assert.assertEquals(finalRatings, initialRatings, "Рейтинг не вернулся в исходное состояние!");
+    }
+
+    private List<Double> getRatingsSafe(By locator) {
+        List<Double> ratings = new ArrayList<>();
+        List<WebElement> elements = driver.findElements(locator);
+        for (WebElement element : elements) {
             if (element.isDisplayed()) {
-                String ratingText = element.getText().trim().replace(",", ".");
-                if (!ratingText.isEmpty()) {
-                    double ratingValue = Double.parseDouble(ratingText);
-                    actualRatings.add(ratingValue);
+                String text = element.getText().trim();
+                if (!text.isEmpty()) {
+                    ratings.add(Double.parseDouble(text));
                 }
             }
         }
+        return ratings;
     }
 
     @AfterClass
