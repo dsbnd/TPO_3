@@ -25,6 +25,7 @@ public class BettingPortalTestsChrome {
     @BeforeClass
     public void setUp() {
         ChromeOptions options = new ChromeOptions();
+        options.setBinary("/usr/bin/chromium-browser");
 
         driver = new ChromeDriver(options);
         driver.manage().window().maximize();
@@ -52,8 +53,12 @@ public class BettingPortalTestsChrome {
     public void testSiteSearch() {
         driver.get("https://tiu.ru/");
 
-        WebElement searchInput = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//input[@name='s']")));
-        searchInput.click();
+        WebElement searchInput = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//input[@name='s']")));
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", searchInput);
+        wait.until(ExpectedConditions.elementToBeClickable(searchInput));
+        js.executeScript("arguments[0].click();", searchInput);
+
         searchInput.clear();
         searchInput.sendKeys("Лига ставок");
         searchInput.sendKeys(Keys.ENTER);
@@ -482,6 +487,46 @@ public class BettingPortalTestsChrome {
             }
         }
     }
+
+    @Test(description = "UC-10: Оценка статьи")
+    public void testArticleRating() throws InterruptedException {
+        driver.get("https://tiu.ru/");
+
+        WebElement articlesMenu = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//a[contains(text(),'Статьи')]")
+        ));
+        articlesMenu.click();
+
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+
+        WebElement specificArticle = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//a[contains(text(),'Валуйная ставка (валуй)')]")
+        ));
+
+        js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", specificArticle);
+        Thread.sleep(1000);
+
+        js.executeScript("arguments[0].click();", specificArticle);
+
+        By starLocator = By.cssSelector(".post-rating-footer__star:nth-child(4)");
+        WebElement fourthStar = wait.until(ExpectedConditions.presenceOfElementLocated(starLocator));
+
+        js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", fourthStar);
+        Thread.sleep(1000);
+
+        Actions actions = new Actions(driver);
+        actions.moveToElement(fourthStar).click().perform();
+
+        WebElement notification = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[contains(text(), 'Спасибо')]")
+        ));
+
+        Assert.assertTrue(notification.isDisplayed(), "Уведомление с благодарностью не появилось на экране!");
+        String notificationText = notification.getText();
+        Assert.assertTrue(notificationText.contains("Спасибо за Вашу оценку") || notificationText.contains("Спасибо"),
+                "Текст уведомления не совпадает! Фактический текст: " + notificationText);
+    }
+
     @Test(description = "UC-11: Просмотр информации об авторе статьи")
     public void testAuthorProfile() {
         driver.get("https://tiu.ru/");
