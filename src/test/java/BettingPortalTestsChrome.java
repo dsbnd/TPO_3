@@ -554,8 +554,15 @@ public class BettingPortalTestsChrome {
                 By.xpath("(//h3[contains(@class, 'blog-card__title')]/a)[1]")
         ));
 
-        Actions actions = new Actions(driver);
-        actions.moveToElement(firstArticle).click().perform();
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", firstArticle);
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", firstArticle);
 
     }
     @Test(description = "UC-12: Поиск статей по категориям")
@@ -573,10 +580,6 @@ public class BettingPortalTestsChrome {
         Assert.assertTrue(categoryButtons.size() > 0, "Кнопки категорий не найдены");
         System.out.println("Найдено кнопок категорий: " + categoryButtons.size());
 
-        for (WebElement btn : categoryButtons) {
-            System.out.println("Доступная категория: " + btn.getText());
-        }
-
         WebElement selectedCategory = categoryButtons.get(0);
         String categoryName = selectedCategory.getText();
         System.out.println("Выбрана категория: " + categoryName);
@@ -589,7 +592,7 @@ public class BettingPortalTestsChrome {
             e.printStackTrace();
         }
 
-        selectedCategory.click();
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", selectedCategory);
         System.out.println("Клик по категории: " + categoryName);
 
         try {
@@ -603,33 +606,17 @@ public class BettingPortalTestsChrome {
                 "Не удалось перейти на страницу категории");
         System.out.println("Страница категории: " + categoryUrl);
 
-        List<WebElement> filteredArticles;
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//div[contains(@class, 'category-posts__list')]")
+        ));
 
-        try {
-            filteredArticles = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
-                    By.xpath("//div[contains(@class, 'category-posts__list')]//article | " +
-                            "//div[contains(@class, 'category-posts__list')]//div[contains(@class, 'category-post-card')]")
-            ));
-        } catch (Exception e) {
-            try {
-                filteredArticles = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
-                        By.xpath("//article[contains(@class, 'blog-card')] | " +
-                                "//div[contains(@class, 'blog-card')]")
-                ));
-            } catch (Exception ex) {
-                filteredArticles = driver.findElements(By.xpath("//a[contains(@href, '/wiki/')]"));
-            }
-        }
+        WebElement firstArticle = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("(//div[contains(@class, 'category-posts__list')]//article//a)[1]")
+        ));
 
-        Assert.assertTrue(filteredArticles.size() > 0, "Статьи не отображаются на странице категории");
-        System.out.println("Найдено статей в категории: " + filteredArticles.size());
+        String articleTitle = firstArticle.getText();
 
-        WebElement firstArticle = filteredArticles.get(0);
-
-        WebElement articleLink = firstArticle.findElement(By.xpath(".//a"));
-        String articleTitle = articleLink.getText();
-
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", articleLink);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", firstArticle);
 
         try {
             Thread.sleep(500);
@@ -637,7 +624,7 @@ public class BettingPortalTestsChrome {
             e.printStackTrace();
         }
 
-        articleLink.click();
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", firstArticle);
         System.out.println("Открыта статья: " + articleTitle);
 
         try {
