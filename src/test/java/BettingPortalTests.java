@@ -1,9 +1,7 @@
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
@@ -111,6 +109,42 @@ public class BettingPortalTests {
             }
         }
         return ratings;
+    }
+
+    @Test(description = "UC-10: Оценка статьи")
+    public void testArticleRating() throws InterruptedException {
+        driver.get("https://tiu.ru/");
+
+        WebElement articlesMenu = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//a[contains(text(),'Статьи')]")
+        ));
+        articlesMenu.click();
+
+        WebElement specificArticle = wait.until(ExpectedConditions.elementToBeClickable(
+
+                By.xpath("//a[contains(text(),'Как скачать и установить приложение Винлайн на компьютер (Windows)?')]")
+        ));
+        specificArticle.click();
+
+        By starLocator = By.cssSelector(".post-rating-footer__star:nth-child(4)");
+        WebElement fourthStar = wait.until(ExpectedConditions.presenceOfElementLocated(starLocator));
+
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", fourthStar);
+
+        Thread.sleep(1000);
+
+        Actions actions = new Actions(driver);
+        actions.moveToElement(fourthStar).click().perform();
+
+        WebElement notification = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[contains(text(), 'Спасибо')]")
+        ));
+
+        Assert.assertTrue(notification.isDisplayed(), "Уведомление с благодарностью не появилось на экране!");
+        String notificationText = notification.getText();
+        Assert.assertTrue(notificationText.contains("Спасибо за Вашу оценку") || notificationText.contains("Спасибо"),
+                "Текст уведомления не совпадает! Фактический текст: " + notificationText);
     }
 
     @AfterClass
