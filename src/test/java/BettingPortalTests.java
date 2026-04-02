@@ -112,7 +112,73 @@ public class BettingPortalTests {
         return ratings;
     }
 
-    @Test(description = "UC-06: Работа с комментариями (Неавторизованный пользователь)")
+    @Test(description = "UC-4: Переход во внешние новостные паблики из раздела 'Нас цитируют'")
+    public void testExternalLinksInCitedBy() {
+        driver.get("https://tiu.ru/");
+
+        try {
+            driver.findElement(By.id("acceptCookies")).click();
+            Thread.sleep(500);
+        } catch (Exception e) {}
+
+        WebElement citedBySection = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//section[contains(@class, 'cited-by')]")
+        ));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", citedBySection);
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Assert.assertTrue(citedBySection.isDisplayed(), "Блок 'Нас цитируют' не найден");
+        System.out.println("Блок 'Нас цитируют' найден");
+
+        List<WebElement> externalLinks = driver.findElements(
+                By.xpath("//span[contains(@class, 'cited-by__item')]")
+        );
+
+        Assert.assertTrue(externalLinks.size() > 0, "Ссылки на внешние издания не найдены");
+        System.out.println("Найдено внешних ссылок: " + externalLinks.size());
+
+        String originalWindow = driver.getWindowHandle();
+
+        WebElement firstLink = externalLinks.get(0);
+        System.out.println("Клик по первому логотипу");
+
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", firstLink);
+        System.out.println("Клик по логотипу издания выполнен");
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Set<String> windows = driver.getWindowHandles();
+        Assert.assertTrue(windows.size() > 1, "Новая вкладка не открылась");
+        System.out.println("Открыто вкладок: " + windows.size());
+
+        for (String window : windows) {
+            if (!window.equals(originalWindow)) {
+                driver.switchTo().window(window);
+                break;
+            }
+        }
+
+        String newUrl = driver.getCurrentUrl();
+        System.out.println("Открыт внешний сайт: " + newUrl);
+
+        Assert.assertFalse(newUrl.contains("tiu.ru"), "Открылась страница tiu.ru, а ожидался внешний сайт");
+
+        driver.close();
+        driver.switchTo().window(originalWindow);
+        System.out.println("Новая вкладка закрыта, возврат к исходной");
+
+    }
+
+    @Test(description = "UC-05: Работа с комментариями (Неавторизованный пользователь)")
     public void testLeaveCommentAsGuest() throws InterruptedException {
         FirefoxOptions options = new FirefoxOptions();
         options.addArguments("-private");
@@ -182,109 +248,7 @@ public class BettingPortalTests {
         }
     }
 
-    @Test(description = "UC-10: Оценка статьи")
-    public void testArticleRating() throws InterruptedException {
-        driver.get("https://tiu.ru/");
-
-        WebElement articlesMenu = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//a[contains(text(),'Статьи')]")
-        ));
-        articlesMenu.click();
-
-        WebElement specificArticle = wait.until(ExpectedConditions.elementToBeClickable(
-
-                By.xpath("//a[contains(text(),'Как скачать и установить приложение Винлайн на компьютер (Windows)?')]")
-        ));
-        specificArticle.click();
-
-        By starLocator = By.cssSelector(".post-rating-footer__star:nth-child(4)");
-        WebElement fourthStar = wait.until(ExpectedConditions.presenceOfElementLocated(starLocator));
-
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-        js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", fourthStar);
-
-        Thread.sleep(1000);
-
-        Actions actions = new Actions(driver);
-        actions.moveToElement(fourthStar).click().perform();
-
-        WebElement notification = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//*[contains(text(), 'Спасибо')]")
-        ));
-
-        Assert.assertTrue(notification.isDisplayed(), "Уведомление с благодарностью не появилось на экране!");
-        String notificationText = notification.getText();
-        Assert.assertTrue(notificationText.contains("Спасибо за Вашу оценку") || notificationText.contains("Спасибо"),
-                "Текст уведомления не совпадает! Фактический текст: " + notificationText);
-    }
-
-    @Test(description = "UC-5: Переход во внешние новостные паблики из раздела 'Нас цитируют'")
-    public void testExternalLinksInCitedBy() {
-        driver.get("https://tiu.ru/");
-
-        try {
-            driver.findElement(By.id("acceptCookies")).click();
-            Thread.sleep(500);
-        } catch (Exception e) {}
-
-        WebElement citedBySection = wait.until(ExpectedConditions.presenceOfElementLocated(
-                By.xpath("//section[contains(@class, 'cited-by')]")
-        ));
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", citedBySection);
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        Assert.assertTrue(citedBySection.isDisplayed(), "Блок 'Нас цитируют' не найден");
-        System.out.println("Блок 'Нас цитируют' найден");
-
-        List<WebElement> externalLinks = driver.findElements(
-                By.xpath("//span[contains(@class, 'cited-by__item')]")
-        );
-
-        Assert.assertTrue(externalLinks.size() > 0, "Ссылки на внешние издания не найдены");
-        System.out.println("Найдено внешних ссылок: " + externalLinks.size());
-
-        String originalWindow = driver.getWindowHandle();
-
-        WebElement firstLink = externalLinks.get(0);
-        System.out.println("Клик по первому логотипу");
-
-        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", firstLink);
-        System.out.println("Клик по логотипу издания выполнен");
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        Set<String> windows = driver.getWindowHandles();
-        Assert.assertTrue(windows.size() > 1, "Новая вкладка не открылась");
-        System.out.println("Открыто вкладок: " + windows.size());
-
-        for (String window : windows) {
-            if (!window.equals(originalWindow)) {
-                driver.switchTo().window(window);
-                break;
-            }
-        }
-
-        String newUrl = driver.getCurrentUrl();
-        System.out.println("Открыт внешний сайт: " + newUrl);
-
-        Assert.assertFalse(newUrl.contains("tiu.ru"), "Открылась страница tiu.ru, а ожидался внешний сайт");
-
-        driver.close();
-        driver.switchTo().window(originalWindow);
-        System.out.println("Новая вкладка закрыта, возврат к исходной");
-
-    }
-
-    @Test(description = "UC-7: Поиск новостей по дате")
+    @Test(description = "UC-6: Поиск новостей по дате")
     public void testNewsSearchByDate() {
         driver.get("https://tiu.ru/");
 
@@ -331,7 +295,7 @@ public class BettingPortalTests {
         System.out.println("Успешно найден и открыта новость: " + newsTitle);
     }
 
-    @Test(description = "UC-8: Оценка бонуса (лайки и дизлайки)")
+    @Test(description = "UC-7: Оценка бонуса (лайки и дизлайки)")
     public void testBonusRating() {
         driver.get("https://tiu.ru/");
 
@@ -478,7 +442,7 @@ public class BettingPortalTests {
                 "Кнопка дизлайка осталась активной после отмены");
     }
 
-    @Test(description = "UC-9: Получение промокода")
+    @Test(description = "UC-8: Получение промокода")
     public void testGetPromocodeSimple() {
         driver.get("https://tiu.ru/bookmaker-bonuses/");
 
@@ -590,7 +554,44 @@ public class BettingPortalTests {
             }
         }
     }
-    @Test(description = "UC-11: Просмотр информации об авторе статьи")
+
+    @Test(description = "UC-9: Оценка статьи")
+    public void testArticleRating() throws InterruptedException {
+        driver.get("https://tiu.ru/");
+
+        WebElement articlesMenu = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//a[contains(text(),'Статьи')]")
+        ));
+        articlesMenu.click();
+
+        WebElement specificArticle = wait.until(ExpectedConditions.elementToBeClickable(
+
+                By.xpath("//a[contains(text(),'Как скачать и установить приложение Винлайн на компьютер (Windows)?')]")
+        ));
+        specificArticle.click();
+
+        By starLocator = By.cssSelector(".post-rating-footer__star:nth-child(4)");
+        WebElement fourthStar = wait.until(ExpectedConditions.presenceOfElementLocated(starLocator));
+
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", fourthStar);
+
+        Thread.sleep(1000);
+
+        Actions actions = new Actions(driver);
+        actions.moveToElement(fourthStar).click().perform();
+
+        WebElement notification = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[contains(text(), 'Спасибо')]")
+        ));
+
+        Assert.assertTrue(notification.isDisplayed(), "Уведомление с благодарностью не появилось на экране!");
+        String notificationText = notification.getText();
+        Assert.assertTrue(notificationText.contains("Спасибо за Вашу оценку") || notificationText.contains("Спасибо"),
+                "Текст уведомления не совпадает! Фактический текст: " + notificationText);
+    }
+
+    @Test(description = "UC-10: Просмотр информации об авторе статьи")
     public void testAuthorProfile() {
         driver.get("https://tiu.ru/");
 
@@ -628,7 +629,7 @@ public class BettingPortalTests {
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", firstArticle);
 
     }
-    @Test(description = "UC-12: Поиск статей по категориям")
+    @Test(description = "UC-11: Поиск статей по категориям")
     public void testSearchArticlesByCategory() {
         driver.get("https://tiu.ru/wiki/");
 

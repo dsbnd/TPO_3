@@ -115,7 +115,7 @@ public class BettingPortalTestsChrome {
         return ratings;
     }
 
-    @Test(description = "UC-5: Переход во внешние новостные паблики из раздела 'Нас цитируют'")
+    @Test(description = "UC-4: Переход во внешние новостные паблики из раздела 'Нас цитируют'")
     public void testExternalLinksInCitedBy() {
         driver.get("https://tiu.ru/");
 
@@ -181,7 +181,7 @@ public class BettingPortalTestsChrome {
 
     }
 
-    @Test(description = "UC-06: Работа с комментариями (Неавторизованный пользователь)")
+    @Test(description = "UC-05: Работа с комментариями (Неавторизованный пользователь)")
     public void testLeaveCommentAsGuestChrome() throws InterruptedException {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--incognito");
@@ -259,7 +259,7 @@ public class BettingPortalTestsChrome {
         }
     }
 
-    @Test(description = "UC-7: Поиск новостей по дате")
+    @Test(description = "UC-6: Поиск новостей по дате")
     public void testNewsSearchByDate() {
         driver.get("https://tiu.ru/");
 
@@ -306,7 +306,7 @@ public class BettingPortalTestsChrome {
         System.out.println("Успешно найден и открыта новость: " + newsTitle);
     }
 
-    @Test(description = "UC-8: Оценка бонуса (лайки и дизлайки)")
+    @Test(description = "UC-7: Оценка бонуса (лайки и дизлайки)")
     public void testBonusRating() {
         driver.get("https://tiu.ru/");
 
@@ -453,7 +453,7 @@ public class BettingPortalTestsChrome {
                 "Кнопка дизлайка осталась активной после отмены");
     }
 
-    @Test(description = "UC-9: Получение промокода")
+    @Test(description = "UC-8: Получение промокода")
     public void testGetPromocodeSimple() {
         driver.get("https://tiu.ru/bookmaker-bonuses/");
 
@@ -566,7 +566,7 @@ public class BettingPortalTestsChrome {
         }
     }
 
-    @Test(description = "UC-10: Оценка статьи")
+    @Test(description = "UC-9: Оценка статьи")
     public void testArticleRating() throws InterruptedException {
         driver.get("https://tiu.ru/");
 
@@ -605,7 +605,7 @@ public class BettingPortalTestsChrome {
                 "Текст уведомления не совпадает! Фактический текст: " + notificationText);
     }
 
-    @Test(description = "UC-11: Просмотр информации об авторе статьи")
+    @Test(description = "UC-10: Просмотр информации об авторе статьи")
     public void testAuthorProfile() {
         driver.get("https://tiu.ru/");
 
@@ -643,7 +643,7 @@ public class BettingPortalTestsChrome {
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", firstArticle);
 
     }
-    @Test(description = "UC-12: Поиск статей по категориям")
+    @Test(description = "UC-11: Поиск статей по категориям")
     public void testSearchArticlesByCategory() {
         driver.get("https://tiu.ru/wiki/");
 
