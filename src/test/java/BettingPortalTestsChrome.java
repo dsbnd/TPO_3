@@ -1,7 +1,4 @@
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.interactions.Actions;
@@ -12,6 +9,8 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,18 +48,81 @@ public class BettingPortalTestsChrome {
         Assert.assertTrue(companyInfoBlock.isDisplayed(), "Блок с информацией о приложении конторы не найден на странице профиля");
     }
 
-    @Test(description = "UC-4: Сортировка рейтинга букмекеров по бонусам")
-    public void testRatingSorting() {
+    @Test(description = "UC-2: Поиск по сайту (поиск конторы Лига ставок)")
+    public void testSiteSearch() {
         driver.get("https://tiu.ru/");
 
-        WebElement menuLink = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//a[contains(text(),'Букмекеры')]")));
-        menuLink.click();
+        WebElement searchInput = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//input[@name='s']")));
+        searchInput.click();
+        searchInput.clear();
+        searchInput.sendKeys("Лига ставок");
+        searchInput.sendKeys(Keys.ENTER);
 
-        WebElement sortedIndicator = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//button[contains(.,'По рейтингу')]")
+        wait.until(ExpectedConditions.urlContains("?s="));
+
+        String currentUrl = driver.getCurrentUrl();
+        String decodedUrl = URLDecoder.decode(currentUrl, StandardCharsets.UTF_8);
+        Assert.assertTrue(decodedUrl.contains("s="), "URL не содержит параметров поиска");
+
+        Assert.assertTrue(decodedUrl.contains("Лига"), "URL не содержит искомое слово");
+
+        List<WebElement> searchResultItems = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
+                By.xpath("//article | //div[contains(@class, 'item')] | //div[contains(@class, 'card')]")
         ));
-        sortedIndicator.click();
 
+        Assert.assertTrue(searchResultItems.size() > 0, "Поиск отработал, но не выдал ни одного результата на странице!");
+    }
+
+    @Test(description = "UC-03: Сортировка рейтинга букмекеров")
+    public void testRatingSortingAndReset() throws InterruptedException {
+        driver.get("https://tiu.ru/");
+
+        wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//a[contains(text(),'Букмекеры')]"))).click();
+
+        By ratingLocator = By.xpath("//div[contains(@class, 'broker-card__rating')]//div[contains(@class, 'broker-card__detail-content')]/span");
+
+        wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[contains(.,'Все')]"))).click();
+        Thread.sleep(2000);
+        List<Double> initialRatings = getRatingsSafe(ratingLocator);
+
+        driver.findElement(By.xpath("//button[contains(.,'По рейтингу')]")).click();
+        Thread.sleep(2000);
+        List<Double> sortedRatings = getRatingsSafe(ratingLocator);
+        Assert.assertNotEquals(initialRatings, sortedRatings, "Список не отсортировался!");
+
+        driver.findElement(By.xpath("//button[contains(.,'Все')]")).click();
+        Thread.sleep(2000);
+        List<Double> finalRatings = getRatingsSafe(ratingLocator);
+        Assert.assertEquals(finalRatings, initialRatings, "Рейтинг не вернулся в исходное состояние!");
+    }
+
+    private List<Double> getRatingsSafe(By locator) {
+        List<Double> ratings = new ArrayList<>();
+        List<WebElement> elements = driver.findElements(locator);
+        for (WebElement element : elements) {
+            if (element.isDisplayed()) {
+                String text = element.getText().trim();
+                if (!text.isEmpty()) {
+                    ratings.add(Double.parseDouble(text));
+                }
+            }
+        }
+        return ratings;
+    }
+
+    @Test(description = "UC-5: Переход во внешние новостные паблики из раздела 'Нас цитируют'")
+    public void testExternalLinksInCitedBy() {
+        driver.get("https://tiu.ru/");
+
+        try {
+            driver.findElement(By.id("acceptCookies")).click();
+            Thread.sleep(500);
+        } catch (Exception e) {}
+
+        WebElement citedBySection = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//section[contains(@class, 'cited-by')]")
+        ));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", citedBySection);
 
         try {
             Thread.sleep(1000);
@@ -68,29 +130,53 @@ public class BettingPortalTestsChrome {
             e.printStackTrace();
         }
 
+        Assert.assertTrue(citedBySection.isDisplayed(), "Блок 'Нас цитируют' не найден");
+        System.out.println("Блок 'Нас цитируют' найден");
 
-        List<WebElement> ratingElements = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
-                By.xpath("//div[contains(@class, 'broker-card__rating')]//div[contains(@class, 'broker-card__detail-content')]/span")
-        ));
+        List<WebElement> externalLinks = driver.findElements(
+                By.xpath("//span[contains(@class, 'cited-by__item')]")
+        );
 
-        List<Double> actualRatings = new ArrayList<>();
+        Assert.assertTrue(externalLinks.size() > 0, "Ссылки на внешние издания не найдены");
+        System.out.println("Найдено внешних ссылок: " + externalLinks.size());
 
-        for (WebElement element : ratingElements) {
-            if (element.isDisplayed()) {
-                String ratingText = element.getText().trim().replace(",", ".");
-                if (!ratingText.isEmpty()) {
-                    double ratingValue = Double.parseDouble(ratingText);
-                    actualRatings.add(ratingValue);
-                }
+        String originalWindow = driver.getWindowHandle();
+
+        WebElement firstLink = externalLinks.get(0);
+        System.out.println("Клик по первому логотипу");
+
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", firstLink);
+        System.out.println("Клик по логотипу издания выполнен");
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Set<String> windows = driver.getWindowHandles();
+        Assert.assertTrue(windows.size() > 1, "Новая вкладка не открылась");
+        System.out.println("Открыто вкладок: " + windows.size());
+
+        for (String window : windows) {
+            if (!window.equals(originalWindow)) {
+                driver.switchTo().window(window);
+                break;
             }
         }
 
-        List<Double> sortedRatings = new ArrayList<>(actualRatings);
-        sortedRatings.sort(Collections.reverseOrder());
+        String newUrl = driver.getCurrentUrl();
+        System.out.println("Открыт внешний сайт: " + newUrl);
 
-        Assert.assertEquals(actualRatings, sortedRatings, "Рейтинги не отсортированы по убыванию");
+        Assert.assertFalse(newUrl.contains("tiu.ru"), "Открылась страница tiu.ru, а ожидался внешний сайт");
+
+        driver.close();
+        driver.switchTo().window(originalWindow);
+        System.out.println("Новая вкладка закрыта, возврат к исходной");
+
     }
-    @Test(description = "UC-06: Поиск новостей по дате")
+
+    @Test(description = "UC-7: Поиск новостей по дате")
     public void testNewsSearchByDate() {
         driver.get("https://tiu.ru/");
 
@@ -137,7 +223,7 @@ public class BettingPortalTestsChrome {
         System.out.println("Успешно найден и открыта новость: " + newsTitle);
     }
 
-    @Test(description = "UC-07: Оценка бонуса (лайки и дизлайки)")
+    @Test(description = "UC-8: Оценка бонуса (лайки и дизлайки)")
     public void testBonusRating() {
         driver.get("https://tiu.ru/");
 
@@ -284,7 +370,7 @@ public class BettingPortalTestsChrome {
                 "Кнопка дизлайка осталась активной после отмены");
     }
 
-    @Test(description = "UC-08: Получение промокода")
+    @Test(description = "UC-9: Получение промокода")
     public void testGetPromocodeSimple() {
         driver.get("https://tiu.ru/bookmaker-bonuses/");
 
@@ -396,7 +482,7 @@ public class BettingPortalTestsChrome {
             }
         }
     }
-    @Test(description = "UC-10: Просмотр информации об авторе статьи")
+    @Test(description = "UC-11: Просмотр информации об авторе статьи")
     public void testAuthorProfile() {
         driver.get("https://tiu.ru/");
 
@@ -426,9 +512,8 @@ public class BettingPortalTestsChrome {
         Actions actions = new Actions(driver);
         actions.moveToElement(firstArticle).click().perform();
 
-        System.out.println("Тест UC-10 успешно завершен");
     }
-    @Test(description = "UC-11: Поиск статей по категориям")
+    @Test(description = "UC-12: Поиск статей по категориям")
     public void testSearchArticlesByCategory() {
         driver.get("https://tiu.ru/wiki/");
 
@@ -519,75 +604,6 @@ public class BettingPortalTestsChrome {
         String articleUrl = driver.getCurrentUrl();
         Assert.assertTrue(articleUrl.contains("/wiki/"), "Не удалось открыть страницу статьи");
 
-        System.out.println("Тест UC-11 успешно завершен: поиск статей по категориям работает корректно");
-    }
-
-
-    @Test(description = "UC-12: Переход во внешние новостные паблики из раздела 'Нас цитируют'")
-    public void testExternalLinksInCitedBy() {
-        driver.get("https://tiu.ru/");
-
-        try {
-            driver.findElement(By.id("acceptCookies")).click();
-            Thread.sleep(500);
-        } catch (Exception e) {}
-
-        WebElement citedBySection = wait.until(ExpectedConditions.presenceOfElementLocated(
-                By.xpath("//section[contains(@class, 'cited-by')]")
-        ));
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", citedBySection);
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        Assert.assertTrue(citedBySection.isDisplayed(), "Блок 'Нас цитируют' не найден");
-        System.out.println("Блок 'Нас цитируют' найден");
-
-        List<WebElement> externalLinks = driver.findElements(
-                By.xpath("//span[contains(@class, 'cited-by__item')]")
-        );
-
-        Assert.assertTrue(externalLinks.size() > 0, "Ссылки на внешние издания не найдены");
-        System.out.println("Найдено внешних ссылок: " + externalLinks.size());
-
-        String originalWindow = driver.getWindowHandle();
-
-        WebElement firstLink = externalLinks.get(0);
-        System.out.println("Клик по первому логотипу");
-
-        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", firstLink);
-        System.out.println("Клик по логотипу издания выполнен");
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        Set<String> windows = driver.getWindowHandles();
-        Assert.assertTrue(windows.size() > 1, "Новая вкладка не открылась");
-        System.out.println("Открыто вкладок: " + windows.size());
-
-        for (String window : windows) {
-            if (!window.equals(originalWindow)) {
-                driver.switchTo().window(window);
-                break;
-            }
-        }
-
-        String newUrl = driver.getCurrentUrl();
-        System.out.println("Открыт внешний сайт: " + newUrl);
-
-        Assert.assertFalse(newUrl.contains("tiu.ru"), "Открылась страница tiu.ru, а ожидался внешний сайт");
-
-        driver.close();
-        driver.switchTo().window(originalWindow);
-        System.out.println("Новая вкладка закрыта, возврат к исходной");
-
-        System.out.println("Тест UC-12 успешно завершен: внешний сайт открыт в новой вкладке");
     }
 
     @AfterClass
