@@ -1,4 +1,5 @@
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -9,6 +10,8 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -46,6 +49,31 @@ public class BettingPortalTests {
                 By.xpath("//a[contains(text(),'Приложение')]")
         ));
         Assert.assertTrue(companyInfoBlock.isDisplayed(), "Блок с информацией о приложении конторы не найден на странице профиля");
+    }
+
+    @Test(description = "UC-2: Поиск по сайту (поиск конторы Лига ставок)")
+    public void testSiteSearch() {
+        driver.get("https://tiu.ru/");
+
+        WebElement searchInput = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//input[@name='s']")));
+        searchInput.click();
+        searchInput.clear();
+        searchInput.sendKeys("Лига ставок");
+        searchInput.sendKeys(Keys.ENTER);
+
+        wait.until(ExpectedConditions.urlContains("?s="));
+
+        String currentUrl = driver.getCurrentUrl();
+        String decodedUrl = URLDecoder.decode(currentUrl, StandardCharsets.UTF_8);
+        Assert.assertTrue(decodedUrl.contains("s="), "URL не содержит параметров поиска");
+
+        Assert.assertTrue(decodedUrl.contains("Лига"), "URL не содержит искомое слово");
+
+        List<WebElement> searchResultItems = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
+                By.xpath("//article | //div[contains(@class, 'item')] | //div[contains(@class, 'card')]")
+        ));
+
+        Assert.assertTrue(searchResultItems.size() > 0, "Поиск отработал, но не выдал ни одного результата на странице!");
     }
 
     @Test(description = "UC-4: Сортировка рейтинга букмекеров по бонусам")
