@@ -400,8 +400,10 @@ public class BettingPortalTestsChrome {
     public void testAuthorProfile() {
         driver.get("https://tiu.ru/");
 
-
-        driver.findElement(By.xpath("//a[contains(text(),'Статьи')]")).click();
+        WebElement articlesLink = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//a[contains(text(),'Статьи')]")
+        ));
+        articlesLink.click();
 
         WebElement readMore = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//a[contains(text(),'Подробнее')]")
@@ -413,15 +415,19 @@ public class BettingPortalTestsChrome {
         ));
         author.click();
 
-        WebElement firstArticle = wait.until(ExpectedConditions.presenceOfElementLocated(
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//div[contains(@class, 'category-posts__list')]")
+        ));
+
+        WebElement firstArticle = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("(//h3[contains(@class, 'blog-card__title')]/a)[1]")
         ));
 
         Actions actions = new Actions(driver);
         actions.moveToElement(firstArticle).click().perform();
 
+        System.out.println("Тест UC-10 успешно завершен");
     }
-
     @AfterClass
     public void tearDown() {
         if (driver != null) {
