@@ -24,25 +24,22 @@ public class BettingPortalTests {
     public void setUp() {
         FirefoxOptions options = new FirefoxOptions();
 
-        // Указываем путь к реальному бинарнику внутри Snap (стандартный путь для Ubuntu/Kubuntu)
-        // Если вдруг не сработает, попробуй поменять на "/usr/bin/firefox" или "/snap/bin/firefox"
         options.setBinary("/snap/firefox/current/usr/lib/firefox/firefox");
 
-        // Передаем опции в драйвер при создании
         driver = new FirefoxDriver(options);
         driver.manage().window().maximize();
 
-        wait=new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
-    @Test(description="UC-1: Навигация по многоуровневому каталогу к приложению БК")
-    public void testCatalog(){
+    @Test(description = "UC-1: Навигация по многоуровневому каталогу к приложению БК")
+    public void testCatalog() {
         driver.get("https://tiu.ru/");
 
         WebElement menuLink = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//a[contains(text(),'Букмекеры')]")));
         menuLink.click();
 
-        WebElement bookmakerCard=wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//a[contains(text(),'Обзор')]")));
+        WebElement bookmakerCard = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//a[contains(text(),'Обзор')]")));
         bookmakerCard.click();
 
         WebElement companyInfoBlock = wait.until(ExpectedConditions.visibilityOfElementLocated(
@@ -63,8 +60,6 @@ public class BettingPortalTests {
         ));
         sortedIndicator.click();
 
-        // 2. ИСПОЛЬЗУЕМ visibilityOfAllElementsLocatedBy вместо presence!
-        // Это отсечет все скрытые мобильные дубликаты
         List<WebElement> ratingElements = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
                 By.xpath("//div[contains(@class, 'broker-card__rating')]//div[contains(@class, 'broker-card__detail-content')]/span")
         ));
@@ -80,8 +75,6 @@ public class BettingPortalTests {
                 }
             }
         }
-
-
     }
 
     @AfterClass
