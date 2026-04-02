@@ -112,15 +112,19 @@ public class BettingPortalTestsChrome {
         ));
         dateToSelect.click();
 
-        List<WebElement> newsItems = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//div[contains(@class, 'news-list')]//a | //article//a | //div[@class='news-item']")
         ));
 
-        Assert.assertTrue(newsItems.size() > 0, "Новости не отображаются после фильтрации по дате");
+        Actions actions = new Actions(driver);
 
-        WebElement firstNews = newsItems.get(0);
+        WebElement firstNews = driver.findElement(
+                By.xpath("(//div[contains(@class, 'news-list')]//a | //article//a | //div[@class='news-item'])[1]")
+        );
+
         String newsTitle = firstNews.getText();
-        firstNews.click();
+
+        actions.moveToElement(firstNews).click().perform();
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//h1 | //h2 | //article | //div[contains(@class, 'news-detail')]")
