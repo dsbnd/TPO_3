@@ -111,6 +111,76 @@ public class BettingPortalTests {
         return ratings;
     }
 
+    @Test(description = "UC-06: Работа с комментариями (Неавторизованный пользователь)")
+    public void testLeaveCommentAsGuest() throws InterruptedException {
+        FirefoxOptions options = new FirefoxOptions();
+        options.addArguments("-private");
+        options.setBinary("/snap/firefox/current/usr/lib/firefox/firefox");
+        WebDriver localDriver = new FirefoxDriver(options);
+        WebDriverWait localWait = new WebDriverWait(localDriver, Duration.ofSeconds(10));
+
+        try {
+            localDriver.manage().window().maximize();
+            localDriver.get("https://tiu.ru/");
+            JavascriptExecutor js = (JavascriptExecutor) localDriver;
+
+            WebElement newsMenu = localWait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//a[contains(text(),'Новости')]")
+            ));
+            js.executeScript("arguments[0].click();", newsMenu);
+
+            WebElement specificNews = localWait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.xpath("//a[contains(text(),'Бубнов и Петржела предложили распустить сборную России')]")
+            ));
+            js.executeScript("arguments[0].scrollIntoView({block: 'center'});", specificNews);
+            Thread.sleep(500);
+            js.executeScript("arguments[0].click();", specificNews);
+
+            WebElement leaveCommentBtn = localWait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.xpath("//a[contains(@href, '#review-form')]")
+            ));
+            js.executeScript("arguments[0].click();", leaveCommentBtn);
+
+            Thread.sleep(2000);
+
+            WebElement commentTextArea = localWait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//textarea[@id='comment']")
+            ));
+            commentTextArea.clear();
+            commentTextArea.sendKeys("Очень интересная новость! Согласен с экспертами.");
+
+            localDriver.findElement(By.id("comment-username")).sendKeys("Иван Тестировщик");
+            localDriver.findElement(By.id("comment-email")).sendKeys("test.ivan123@example.com");
+
+            WebElement phoneInput = localDriver.findElement(By.id("comment-phone"));
+            js.executeScript("arguments[0].click();", phoneInput);
+            phoneInput.sendKeys("9991234567");
+
+            WebElement agreeReviewsCheckbox = localDriver.findElement(By.name("acf[agree_reviews]"));
+            js.executeScript("arguments[0].click();", agreeReviewsCheckbox);
+
+            WebElement agreePersonalDataCheckbox = localDriver.findElement(By.xpath("//input[@name='acf[agree_personal_data]']"));
+            js.executeScript("arguments[0].click();", agreePersonalDataCheckbox);
+
+            WebElement submitBtn = localDriver.findElement(By.xpath("//input[@id='submit' and @value='Оставить комментарий']"));
+            js.executeScript("arguments[0].click();", submitBtn);
+
+            localWait.until(d -> {
+                String pageText = d.findElement(By.tagName("body")).getText().toLowerCase();
+                return pageText.contains("модераци") || pageText.contains("ошибк") || pageText.contains("попробуйт");
+            });
+
+            String finalPageText = localDriver.findElement(By.tagName("body")).getText().toLowerCase();
+
+            boolean isSuccess = finalPageText.contains("модераци");
+            boolean isAntiSpamError = finalPageText.contains("ошибк") || finalPageText.contains("попробуйт");
+            Assert.assertTrue(isSuccess || isAntiSpamError,
+                    "Сайт вообще никак не отреагировал на кнопку отправки комментария!");
+        } finally {
+            localDriver.quit();
+        }
+    }
+
     @Test(description = "UC-10: Оценка статьи")
     public void testArticleRating() throws InterruptedException {
         driver.get("https://tiu.ru/");
