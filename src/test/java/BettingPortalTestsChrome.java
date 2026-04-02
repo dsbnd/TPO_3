@@ -428,6 +428,168 @@ public class BettingPortalTestsChrome {
 
         System.out.println("Тест UC-10 успешно завершен");
     }
+    @Test(description = "UC-11: Поиск статей по категориям")
+    public void testSearchArticlesByCategory() {
+        driver.get("https://tiu.ru/wiki/");
+
+        String currentUrl = driver.getCurrentUrl();
+        Assert.assertTrue(currentUrl.contains("/wiki/"), "Не удалось перейти в раздел статей");
+        System.out.println("Перешли в раздел статей: " + currentUrl);
+
+        List<WebElement> categoryButtons = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
+                By.xpath("//div[contains(@class, 'block-categories-row')]//a[contains(@class, 'block-categories-row__button')]")
+        ));
+
+        Assert.assertTrue(categoryButtons.size() > 0, "Кнопки категорий не найдены");
+        System.out.println("Найдено кнопок категорий: " + categoryButtons.size());
+
+        for (WebElement btn : categoryButtons) {
+            System.out.println("Доступная категория: " + btn.getText());
+        }
+
+        WebElement selectedCategory = categoryButtons.get(0);
+        String categoryName = selectedCategory.getText();
+        System.out.println("Выбрана категория: " + categoryName);
+
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", selectedCategory);
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        selectedCategory.click();
+        System.out.println("Клик по категории: " + categoryName);
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        String categoryUrl = driver.getCurrentUrl();
+        Assert.assertTrue(categoryUrl.contains("/wiki/") && !categoryUrl.equals(currentUrl),
+                "Не удалось перейти на страницу категории");
+        System.out.println("Страница категории: " + categoryUrl);
+
+        List<WebElement> filteredArticles;
+
+        try {
+            filteredArticles = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
+                    By.xpath("//div[contains(@class, 'category-posts__list')]//article | " +
+                            "//div[contains(@class, 'category-posts__list')]//div[contains(@class, 'category-post-card')]")
+            ));
+        } catch (Exception e) {
+            try {
+                filteredArticles = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
+                        By.xpath("//article[contains(@class, 'blog-card')] | " +
+                                "//div[contains(@class, 'blog-card')]")
+                ));
+            } catch (Exception ex) {
+                filteredArticles = driver.findElements(By.xpath("//a[contains(@href, '/wiki/')]"));
+            }
+        }
+
+        Assert.assertTrue(filteredArticles.size() > 0, "Статьи не отображаются на странице категории");
+        System.out.println("Найдено статей в категории: " + filteredArticles.size());
+
+        WebElement firstArticle = filteredArticles.get(0);
+
+        WebElement articleLink = firstArticle.findElement(By.xpath(".//a"));
+        String articleTitle = articleLink.getText();
+
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", articleLink);
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        articleLink.click();
+        System.out.println("Открыта статья: " + articleTitle);
+
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        String articleUrl = driver.getCurrentUrl();
+        Assert.assertTrue(articleUrl.contains("/wiki/"), "Не удалось открыть страницу статьи");
+
+        System.out.println("Тест UC-11 успешно завершен: поиск статей по категориям работает корректно");
+    }
+
+
+    @Test(description = "UC-12: Переход во внешние новостные паблики из раздела 'Нас цитируют'")
+    public void testExternalLinksInCitedBy() {
+        driver.get("https://tiu.ru/");
+
+        try {
+            driver.findElement(By.id("acceptCookies")).click();
+            Thread.sleep(500);
+        } catch (Exception e) {}
+
+        WebElement citedBySection = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//section[contains(@class, 'cited-by')]")
+        ));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", citedBySection);
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Assert.assertTrue(citedBySection.isDisplayed(), "Блок 'Нас цитируют' не найден");
+        System.out.println("Блок 'Нас цитируют' найден");
+
+        List<WebElement> externalLinks = driver.findElements(
+                By.xpath("//span[contains(@class, 'cited-by__item')]")
+        );
+
+        Assert.assertTrue(externalLinks.size() > 0, "Ссылки на внешние издания не найдены");
+        System.out.println("Найдено внешних ссылок: " + externalLinks.size());
+
+        String originalWindow = driver.getWindowHandle();
+
+        WebElement firstLink = externalLinks.get(0);
+        System.out.println("Клик по первому логотипу");
+
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", firstLink);
+        System.out.println("Клик по логотипу издания выполнен");
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Set<String> windows = driver.getWindowHandles();
+        Assert.assertTrue(windows.size() > 1, "Новая вкладка не открылась");
+        System.out.println("Открыто вкладок: " + windows.size());
+
+        for (String window : windows) {
+            if (!window.equals(originalWindow)) {
+                driver.switchTo().window(window);
+                break;
+            }
+        }
+
+        String newUrl = driver.getCurrentUrl();
+        System.out.println("Открыт внешний сайт: " + newUrl);
+
+        Assert.assertFalse(newUrl.contains("tiu.ru"), "Открылась страница tiu.ru, а ожидался внешний сайт");
+
+        driver.close();
+        driver.switchTo().window(originalWindow);
+        System.out.println("Новая вкладка закрыта, возврат к исходной");
+
+        System.out.println("Тест UC-12 успешно завершен: внешний сайт открыт в новой вкладке");
+    }
+
     @AfterClass
     public void tearDown() {
         if (driver != null) {
