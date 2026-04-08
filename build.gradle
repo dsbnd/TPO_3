@@ -18,4 +18,8 @@ dependencies {
 
 test {
     useTestNG()
+    testLogging {
+        events "PASSED", "FAILED", "SKIPPED"
+    }
+    systemProperty "browser", System.getProperty("browser", "chrome")
 }
