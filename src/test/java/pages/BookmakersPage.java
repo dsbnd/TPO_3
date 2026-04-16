@@ -56,4 +56,33 @@ public class BookmakersPage {
         }
         return ratings;
     }
+
+    private By brokerCards = By.xpath("//article[contains(@class, 'broker-card')]");
+    private By brokerTitles = By.xpath("//article[contains(@class, 'broker-card')]//span[contains(@class, 'broker-card__title')]");
+    private By filterByBonusBtn = By.xpath("//button[contains(@class, 'sort-btn') and contains(text(), 'По бонус')]");
+
+    public int getBookmakerCount() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(brokerCards));
+        return driver.findElements(brokerCards).size();
+    }
+
+    public void clickFilterByBonus() throws InterruptedException {
+        wait.until(ExpectedConditions.elementToBeClickable(filterByBonusBtn)).click();
+        Thread.sleep(2000);
+    }
+
+    public List<String> getBookmakerNamesList() {
+        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(brokerTitles));
+        List<WebElement> elements = driver.findElements(brokerTitles);
+        List<String> names = new ArrayList<>();
+        org.openqa.selenium.JavascriptExecutor js = (org.openqa.selenium.JavascriptExecutor) driver;
+        for (WebElement e : elements) {
+            String text = (String) js.executeScript("return arguments[0].textContent;", e);
+            if (text != null) {
+                text = text.trim();
+                if (!text.isEmpty()) names.add(text);
+            }
+        }
+        return names;
+    }
 }

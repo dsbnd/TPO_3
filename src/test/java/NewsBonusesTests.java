@@ -113,4 +113,81 @@ public class NewsBonusesTests extends BaseTest {
             driver.navigate().back(); // Возвращаемся обратно для чистоты
         }
     }
+
+    @Test(description = "UC-18: Переключение месяца в календаре меняет label")
+    public void testCalendarMonthSwitch() throws InterruptedException {
+        HomePage homePage = new HomePage(driver);
+        NewsPage newsPage = new NewsPage(driver);
+
+        homePage.open();
+        homePage.goToNews();
+
+        newsPage.openCalendar();
+        String before = newsPage.getCurrentCalendarMonthLabel();
+        newsPage.switchCalendarToNextMonth();
+        String after = newsPage.getCurrentCalendarMonthLabel();
+
+        Assert.assertFalse(before.isEmpty(), "Label месяца до клика пуст!");
+        Assert.assertNotEquals(after, before,
+                "Label месяца не изменился после клика 'следующий'!");
+    }
+
+    @Test(description = "UC-19: Сброс фильтра по дате возвращает полный список новостей")
+    public void testDateFilterResetRestoresFullList() throws InterruptedException {
+        HomePage homePage = new HomePage(driver);
+        NewsPage newsPage = new NewsPage(driver);
+
+        homePage.open();
+        homePage.goToNews();
+
+        int initial = newsPage.getNewsCardsCount();
+        newsPage.selectFirstDayOfMonth();
+        Thread.sleep(1500);
+        int filtered = newsPage.getNewsCardsCount();
+
+        newsPage.resetDateFilter();
+        int restored = newsPage.getNewsCardsCount();
+
+        Assert.assertTrue(initial > 0, "Начальный список новостей пуст!");
+        Assert.assertTrue(restored >= filtered,
+                "После сброса фильтра новостей меньше, чем при фильтре! restored=" + restored + " filtered=" + filtered);
+    }
+
+    @Test(description = "UC-20: Кнопка 'Нравится' получает активный класс после клика")
+    public void testLikeButtonGetsActiveClass() throws InterruptedException {
+        HomePage homePage = new HomePage(driver);
+        BonusesPage bonusesPage = new BonusesPage(driver);
+
+        homePage.open();
+        homePage.goToBonuses();
+        bonusesPage.scrollToBonus(1);
+
+        boolean before = bonusesPage.isLikeButtonActive(1);
+        bonusesPage.clickLikeOnBonus(1);
+        boolean after = bonusesPage.isLikeButtonActive(1);
+
+        Assert.assertNotEquals(after, before,
+                "Состояние активности лайка не изменилось после клика!");
+    }
+
+    @Test(description = "UC-21: Лайк одного бонуса не меняет счётчик другого")
+    public void testLikesAreIndependentBetweenBonuses() throws InterruptedException {
+        HomePage homePage = new HomePage(driver);
+        BonusesPage bonusesPage = new BonusesPage(driver);
+
+        homePage.open();
+        homePage.goToBonuses();
+
+        bonusesPage.scrollToBonus(2);
+        int secondBefore = bonusesPage.getLikeCount(2);
+
+        bonusesPage.scrollToBonus(1);
+        bonusesPage.clickLikeOnBonus(1);
+
+        bonusesPage.scrollToBonus(2);
+        int secondAfter = bonusesPage.getLikeCount(2);
+
+        Assert.assertEquals(secondAfter, secondBefore,
+                "Счётчик лайков бонуса #2 изменился после клика на бонус #1!");
+    }
 }

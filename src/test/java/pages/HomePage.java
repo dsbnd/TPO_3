@@ -83,4 +83,14 @@ public class HomePage {
             ((JavascriptExecutor) driver).executeScript("arguments[0].click();", links.get(0));
         }
     }
+
+    private By noResultsPlaceholder = By.xpath("//*[contains(@class, 'search-page__empty-title') or contains(@class, 'search-page__empty')]");
+
+    public boolean isNoResultsPlaceholderDisplayed() {
+        try {
+            return wait.until(ExpectedConditions.visibilityOfElementLocated(noResultsPlaceholder)).isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

@@ -57,6 +57,50 @@ public class BonusesPage {
     public void clickGetBonus() throws InterruptedException {
         WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("(//div[contains(@class, 'bonus-card')])[1]//span[contains(@class, 'bonus-card__btn')]")));
         js.executeScript("arguments[0].click();", btn);
-        Thread.sleep(2000); // Ждем редирект/новую вкладку
+        Thread.sleep(2000);
+    }
+
+
+    private String bonusCardXPath(int index) {
+        return "(//article[contains(@class, 'bonus-card')])[" + index + "]";
+    }
+
+    private By bonusCardAt(int index) {
+        return By.xpath(bonusCardXPath(index));
+    }
+
+    private By likeBtnAt(int index) {
+        return By.xpath(bonusCardXPath(index) + "//button[contains(@class, 'reaction-btn--like')]");
+    }
+
+    private By likeCountAt(int index) {
+        return By.xpath(bonusCardXPath(index) + "//button[contains(@class, 'reaction-btn--like')]//span[contains(@class, 'reaction-count')]");
+    }
+
+    public void scrollToBonus(int index) throws InterruptedException {
+        WebElement card = wait.until(ExpectedConditions.visibilityOfElementLocated(bonusCardAt(index)));
+        js.executeScript("arguments[0].scrollIntoView({block: 'center'});", card);
+        Thread.sleep(500);
+    }
+
+    public int clickLikeOnBonus(int index) throws InterruptedException {
+        WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(likeBtnAt(index)));
+        js.executeScript("arguments[0].click();", btn);
+        Thread.sleep(1500);
+        return getLikeCount(index);
+    }
+
+    public int getLikeCount(int index) {
+        WebElement span = wait.until(ExpectedConditions.presenceOfElementLocated(likeCountAt(index)));
+        String text = span.getText().trim();
+        return text.isEmpty() ? 0 : Integer.parseInt(text);
+    }
+
+    public boolean isLikeButtonActive(int index) {
+        WebElement btn = wait.until(ExpectedConditions.presenceOfElementLocated(likeBtnAt(index)));
+        String cls = btn.getAttribute("class");
+        if (cls != null && cls.toLowerCase().contains("active")) return true;
+        String pressed = btn.getAttribute("aria-pressed");
+        return "true".equalsIgnoreCase(pressed);
     }
 }

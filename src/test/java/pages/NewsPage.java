@@ -80,4 +80,129 @@ public class NewsPage {
         });
         return driver.findElement(By.tagName("body")).getText().toLowerCase();
     }
+
+    private By commentForm = By.xpath("//form[contains(@class, 'broker-review-form__comment')]");
+    private By commentTextarea = By.xpath("//form[contains(@class, 'broker-review-form__comment')]//textarea[@name='comment']");
+    private By commentUsername = By.xpath("//form[contains(@class, 'broker-review-form__comment')]//input[@type='text']");
+    private By commentEmail = By.xpath("//form[contains(@class, 'broker-review-form__comment')]//input[@type='email']");
+    private By commentPhone = By.xpath("//form[contains(@class, 'broker-review-form__comment')]//input[@type='tel']");
+    private By commentCheckboxes = By.xpath("//form[contains(@class, 'broker-review-form__comment')]//input[@type='checkbox']");
+    private By commentSubmit = By.xpath("//form[contains(@class, 'broker-review-form__comment')]//button[contains(@class, 'form__btn')]");
+
+    private void scrollToForm() throws InterruptedException {
+        WebElement form = wait.until(ExpectedConditions.presenceOfElementLocated(commentForm));
+        js.executeScript("arguments[0].scrollIntoView({block: 'center'});", form);
+        Thread.sleep(500);
+    }
+
+    private void fillCommentFieldsXPath(String name, String email, String phone, String text) throws InterruptedException {
+        scrollToForm();
+        WebElement textarea = wait.until(ExpectedConditions.presenceOfElementLocated(commentTextarea));
+        if (text != null) {
+            textarea.clear();
+            textarea.sendKeys(text);
+        }
+        WebElement usr = driver.findElement(commentUsername);
+        usr.clear();
+        usr.sendKeys(name);
+        WebElement em = driver.findElement(commentEmail);
+        em.clear();
+        em.sendKeys(email);
+        WebElement ph = driver.findElement(commentPhone);
+        js.executeScript("arguments[0].click();", ph);
+        ph.sendKeys(phone);
+    }
+
+
+    private void clickCheckboxes() {
+        java.util.List<WebElement> cbs = driver.findElements(commentCheckboxes);
+        for (WebElement cb : cbs) {
+            js.executeScript("arguments[0].click();", cb);
+        }
+    }
+
+    private void clickSubmit() {
+        WebElement btn = wait.until(ExpectedConditions.presenceOfElementLocated(commentSubmit));
+        js.executeScript("arguments[0].click();", btn);
+    }
+
+    public void submitCommentWithoutConsent(String name, String email, String phone, String text) throws InterruptedException {
+        fillCommentFieldsXPath(name, email, phone, text);
+        clickSubmit();
+    }
+
+    public void submitCommentWithBadEmail(String name, String badEmail, String phone, String text) throws InterruptedException {
+        fillCommentFieldsXPath(name, badEmail, phone, text);
+        clickCheckboxes();
+        clickSubmit();
+    }
+
+    public void submitCommentEmpty(String name, String email, String phone) throws InterruptedException {
+        fillCommentFieldsXPath(name, email, phone, null);
+        clickCheckboxes();
+        clickSubmit();
+    }
+
+    public boolean isCommentSubmittedSuccessfully() {
+        try {
+            WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(4));
+            shortWait.until(d -> d.findElement(By.tagName("body")).getText().toLowerCase().contains("модераци"));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String getFieldValidationMessage(By fieldLocator) {
+        WebElement el = driver.findElement(fieldLocator);
+        Object msg = js.executeScript("return arguments[0].validationMessage;", el);
+        return msg == null ? "" : msg.toString();
+    }
+
+    public String getEmailValidationMessage() {
+        return getFieldValidationMessage(commentEmail);
+    }
+
+    public String getTextareaValidationMessage() {
+        return getFieldValidationMessage(commentTextarea);
+    }
+
+    public String getCheckboxValidationMessage() {
+        java.util.List<WebElement> cbs = driver.findElements(commentCheckboxes);
+        if (cbs.isEmpty()) return "";
+        Object msg = js.executeScript("return arguments[0].validationMessage;", cbs.get(0));
+        return msg == null ? "" : msg.toString();
+    }
+
+    private By calendarInput = By.xpath("//input[contains(@class, 'news-calendar__input')]");
+    private By calendarMonthLabel = By.xpath("//div[contains(@class, 'news-calendar__month-year')]");
+    private By calendarNextBtn = By.xpath("//button[contains(@class, 'news-calendar__nav-btn--next')]");
+    private By calendarClearBtn = By.xpath("//button[contains(@class, 'news-calendar__clear')]");
+    private By newsItems = By.xpath("//article[contains(@class, 'news-item')]");
+
+    public void openCalendar() throws InterruptedException {
+        WebElement input = wait.until(ExpectedConditions.elementToBeClickable(calendarInput));
+        input.click();
+        Thread.sleep(500);
+    }
+
+    public String getCurrentCalendarMonthLabel() {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(calendarMonthLabel)).getText().trim();
+    }
+
+    public void switchCalendarToNextMonth() throws InterruptedException {
+        WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(calendarNextBtn));
+        js.executeScript("arguments[0].click();", btn);
+        Thread.sleep(500);
+    }
+
+    public void resetDateFilter() throws InterruptedException {
+        WebElement btn = wait.until(ExpectedConditions.presenceOfElementLocated(calendarClearBtn));
+        js.executeScript("arguments[0].click();", btn);
+        Thread.sleep(1500);
+    }
+
+    public int getNewsCardsCount() {
+        return driver.findElements(newsItems).size();
+    }
 }

@@ -106,14 +106,68 @@ public class ArticlesPage {
     public String clickFirstCategoryAndGetName() throws InterruptedException {
         List<WebElement> categoryBtns = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
                 By.xpath("//div[contains(@class, 'block-categories-row')]//a[contains(@class, 'block-categories-row__button')]")));
-        
+
         WebElement selectedCategory = categoryBtns.get(0);
         String categoryName = selectedCategory.getText();
-        
+
         js.executeScript("arguments[0].scrollIntoView(true);", selectedCategory);
         Thread.sleep(500);
         js.executeScript("arguments[0].click();", selectedCategory);
-        
+
         return categoryName;
+    }
+
+    private By stars = By.xpath("//span[contains(@class, 'post-rating-footer__star')]");
+    private By activeStars = By.xpath("//span[contains(@class, 'post-rating-footer__star') and contains(@class, 'active')]");
+    private By authorPosition = By.xpath("//div[contains(@class, 'author-page__position')]");
+    private By categoryButtons = By.xpath("//a[contains(@class, 'block-categories-row__button')]");
+    private By articleTitles = By.xpath("//h3[contains(@class, 'blog-card__title')]");
+
+    public void clickStar(int index) throws InterruptedException {
+        By star = By.xpath("(//span[contains(@class, 'post-rating-footer__star')])[" + index + "]");
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(star));
+        js.executeScript("arguments[0].scrollIntoView({block: 'center'});", el);
+        Thread.sleep(500);
+        new Actions(driver).moveToElement(el).click().perform();
+        Thread.sleep(1500);
+    }
+
+    public int getActiveStarCount() {
+        return driver.findElements(activeStars).size();
+    }
+
+    public int getStarCount() {
+        return driver.findElements(stars).size();
+    }
+
+    public String getAuthorBioText() {
+        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(authorPosition));
+        String text = el.getText();
+        return text == null ? "" : text.trim();
+    }
+
+    public int getCategoryButtonCount() {
+        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(categoryButtons));
+        return driver.findElements(categoryButtons).size();
+    }
+
+    public void clickCategoryByIndex(int index) throws InterruptedException {
+        List<WebElement> btns = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(categoryButtons));
+        WebElement target = btns.get(index);
+        js.executeScript("arguments[0].scrollIntoView({block: 'center'});", target);
+        Thread.sleep(500);
+        js.executeScript("arguments[0].click();", target);
+        Thread.sleep(1500);
+    }
+
+    public List<String> getVisibleArticleTitles() {
+        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(articleTitles));
+        List<WebElement> els = driver.findElements(articleTitles);
+        List<String> titles = new java.util.ArrayList<>();
+        for (WebElement e : els) {
+            String t = e.getText();
+            if (t != null && !t.trim().isEmpty()) titles.add(t.trim());
+        }
+        return titles;
     }
 }
