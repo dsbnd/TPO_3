@@ -15,8 +15,8 @@ public class BookmakersPage {
     private WebDriverWait wait;
 
     // Локаторы
-    private By reviewButton = By.xpath("//a[contains(text(),'Обзор')]");
-    private By appInfoBlock = By.xpath("//a[contains(text(),'Приложение')]");
+    private By reviewButton = By.xpath("//a[contains(@class, 'broker-card__btn') and contains(@class, 'broker-card__btn--review')]");
+    private By appInfoBlock = By.xpath("//a[contains(@class, 'broker-tabs__link') and contains(@href, '/apps/')]");
     private By ratingValue = By.xpath("//div[contains(@class, 'broker-card__rating')]//div[contains(@class, 'broker-card__detail-content')]/span");
     private By filterAllBtn = By.xpath("//button[contains(.,'Все')]");
     private By filterByRatingBtn = By.xpath("//button[contains(.,'По рейтингу')]");

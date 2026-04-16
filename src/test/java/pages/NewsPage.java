@@ -21,10 +21,10 @@ public class NewsPage {
         this.js = (JavascriptExecutor) driver;
     }
 
-    // --- UC-6: Календарь ---
+    // UC-6: Календарь
     public void selectFirstDayOfMonth() {
         WebElement calendarInput = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//input[contains(@class, 'news-calendar__input') or contains(@placeholder, 'дата')]")));
+                By.xpath("//input[contains(@class, 'news-calendar__input')]")));
         calendarInput.click();
 
         WebElement dayOne = wait.until(ExpectedConditions.elementToBeClickable(
@@ -38,7 +38,7 @@ public class NewsPage {
         new Actions(driver).moveToElement(firstNews).click().perform();
     }
 
-    // --- UC-5: Бронебойный комментарий ---
+    // UC-5: Бронебойный комментарий
     public void openSpecificNews(String newsTitle) throws InterruptedException {
         WebElement specificNews = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//a[contains(text(),'" + newsTitle + "')]")));
