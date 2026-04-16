@@ -6,6 +6,7 @@ import pages.HomePage;
 
 public class ArticlesTests extends BaseTest {
 
+    //не проходит
     @Test(description = "UC-9: Оценка статьи")
     public void testArticleRating() throws InterruptedException {
         HomePage homePage = new HomePage(driver);
@@ -24,6 +25,7 @@ public class ArticlesTests extends BaseTest {
                 "Уведомление об оценке не появилось или текст не совпадает!");
     }
 
+    //не проходит
     @Test(description = "UC-10: Просмотр информации об авторе статьи")
     public void testAuthorProfile() throws InterruptedException {
         HomePage homePage = new HomePage(driver);
