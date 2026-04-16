@@ -15,10 +15,10 @@ public class ArticlesTests extends BaseTest {
         homePage.open();
         homePage.goToArticles();
         
-        articlesPage.openSpecificArticle("Как скачать и установить приложение Винлайн на компьютер (Windows)?");
+        articlesPage.openSpecificArticle("Футбольные номера: история, значения и легенды игры");
         
         // Ставим 4 звезды
-        articlesPage.rateArticle(4);
+        articlesPage.rateArticle(3);
         
         String notification = articlesPage.getRatingNotificationText();
         Assert.assertTrue(notification.contains("Спасибо"), 

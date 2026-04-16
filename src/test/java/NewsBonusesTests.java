@@ -39,7 +39,8 @@ public class NewsBonusesTests extends BaseTest {
 
         homePage.open();
         homePage.goToNews();
-        newsPage.openSpecificNews("Бубнов и Петржела предложили распустить сборную России");
+        newsPage.openSpecificNews(
+                "Капризов стал лучшим российским снайпером в нынешнем сезоне регулярного чемпионата НХЛ");
         
         newsPage.leaveComment("Иван Тестировщик", "test.ivan123@example.com", "9991234567", "Очень интересная новость!");
         
