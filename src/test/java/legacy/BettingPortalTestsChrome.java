@@ -1,15 +1,14 @@
+package legacy;
+
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.net.URLDecoder;
@@ -19,40 +18,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class BettingNewTests {
+public class BettingPortalTestsChrome {
 
     private WebDriver driver;
     private WebDriverWait wait;
 
     @BeforeClass
     public void setUp() {
-        String browser = System.getProperty("browser", "chrome");
-        switch (browser.toLowerCase()) {
-            case "chrome":
-                ChromeOptions chromeOptions = new ChromeOptions();
-                chromeOptions.setBinary("/usr/bin/chromium-browser");
-                driver = new ChromeDriver(chromeOptions);
-                break;
-            case "firefox":
-                FirefoxOptions firefoxOptions = new FirefoxOptions();
-                firefoxOptions.setBinary("/snap/firefox/current/usr/lib/firefox/firefox");
-                driver = new FirefoxDriver(firefoxOptions);
-                break;
-            default:
-                throw new IllegalArgumentException("Browser not supported: " + browser);
-        }
+        ChromeOptions options = new ChromeOptions();
+        options.setBinary("/usr/bin/chromium-browser");
+
+        driver = new ChromeDriver(options);
         driver.manage().window().maximize();
+
         wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
-
-    @AfterClass
-    public void tearDown() {
-        if (driver != null) {
-            driver.quit();
-        }
-    }
-
-
 
     @Test(description = "UC-1: Навигация по многоуровневому каталогу к приложению БК")
     public void testCatalog() {
@@ -74,8 +54,12 @@ public class BettingNewTests {
     public void testSiteSearch() {
         driver.get("https://tiu.ru/");
 
-        WebElement searchInput = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//input[@name='s']")));
-        searchInput.click();
+        WebElement searchInput = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//input[@name='s']")));
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", searchInput);
+        wait.until(ExpectedConditions.elementToBeClickable(searchInput));
+        js.executeScript("arguments[0].click();", searchInput);
+
         searchInput.clear();
         searchInput.sendKeys("Лига ставок");
         searchInput.sendKeys(Keys.ENTER);
@@ -195,27 +179,15 @@ public class BettingNewTests {
         driver.close();
         driver.switchTo().window(originalWindow);
         System.out.println("Новая вкладка закрыта, возврат к исходной");
+
     }
 
-    @Test(description = "UC-5: Работа с комментариями (Неавторизованный пользователь)")
-    public void testLeaveCommentAsGuest() throws InterruptedException {
-        WebDriver localDriver;
-
-        // Определяем какой браузер для инкогнито
-        String browser = System.getProperty("browser", "chrome");
-
-        if (browser.equalsIgnoreCase("chrome")) {
-            ChromeOptions options = new ChromeOptions();
-            options.setBinary("/usr/bin/chromium-browser");
-            options.addArguments("--incognito");
-            localDriver = new ChromeDriver(options);
-        } else {
-            FirefoxOptions options = new FirefoxOptions();
-            options.setBinary("/snap/firefox/current/usr/lib/firefox/firefox");
-            options.addArguments("-private");
-            localDriver = new FirefoxDriver(options);
-        }
-
+    @Test(description = "UC-05: Работа с комментариями (Неавторизованный пользователь)")
+    public void testLeaveCommentAsGuestChrome() throws InterruptedException {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--incognito");
+        options.setBinary("/usr/bin/chromium-browser");
+        WebDriver localDriver = new ChromeDriver(options);
         WebDriverWait localWait = new WebDriverWait(localDriver, Duration.ofSeconds(10));
 
         try {
@@ -273,8 +245,16 @@ public class BettingNewTests {
 
             boolean isSuccess = finalPageText.contains("модераци");
             boolean isAntiSpamError = finalPageText.contains("ошибк") || finalPageText.contains("попробуйт");
+
+            if (isAntiSpamError) {
+                System.out.println("РЕЗУЛЬТАТ: Сработала защита от ботов (ошибка авторизации/попробуйте позже).");
+            } else if (isSuccess) {
+                System.out.println("РЕЗУЛЬТАТ: Успешно отправлено на модерацию!");
+            }
+
             Assert.assertTrue(isSuccess || isAntiSpamError,
                     "Сайт вообще никак не отреагировал на кнопку отправки комментария!");
+
         } finally {
             localDriver.quit();
         }
@@ -596,17 +576,21 @@ public class BettingNewTests {
         ));
         articlesMenu.click();
 
-        WebElement specificArticle = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//a[contains(text(),'Как скачать и установить приложение Винлайн на компьютер (Windows)?')]")
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+
+        WebElement specificArticle = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//a[contains(text(),'Валуйная ставка (валуй)')]")
         ));
-        specificArticle.click();
+
+        js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", specificArticle);
+        Thread.sleep(1000);
+
+        js.executeScript("arguments[0].click();", specificArticle);
 
         By starLocator = By.cssSelector(".post-rating-footer__star:nth-child(4)");
         WebElement fourthStar = wait.until(ExpectedConditions.presenceOfElementLocated(starLocator));
 
-        JavascriptExecutor js = (JavascriptExecutor) driver;
         js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", fourthStar);
-
         Thread.sleep(1000);
 
         Actions actions = new Actions(driver);
@@ -658,8 +642,8 @@ public class BettingNewTests {
         }
 
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", firstArticle);
-    }
 
+    }
     @Test(description = "UC-11: Поиск статей по категориям")
     public void testSearchArticlesByCategory() {
         driver.get("https://tiu.ru/wiki/");
@@ -730,5 +714,13 @@ public class BettingNewTests {
 
         String articleUrl = driver.getCurrentUrl();
         Assert.assertTrue(articleUrl.contains("/wiki/"), "Не удалось открыть страницу статьи");
+
+    }
+
+    @AfterClass
+    public void tearDown() {
+        if (driver != null) {
+            driver.quit();
+        }
     }
 }
