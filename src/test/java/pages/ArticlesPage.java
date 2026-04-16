@@ -66,14 +66,14 @@ public class ArticlesPage {
 
     public String getRatingNotificationText() {
         WebElement notification = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//*[contains(text(), 'Спасибо')]")));
+                By.xpath("//div[@class='notification notification--success']")));
         return notification.getText();
     }
 
     // --- Для UC-10 (Автор) ---
     public void clickReadMore() {
         WebElement readMore = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//a[contains(text(),'Подробнее')]")));
+                By.xpath("//a[contains(@class, 'hero-news-card__button')]")));
         js.executeScript("arguments[0].click();", readMore);
     }
 
@@ -84,13 +84,15 @@ public class ArticlesPage {
     }
 
     public void openFirstArticleInList() throws InterruptedException {
-        // Ждем список статей (универсальный локатор и для авторов, и для категорий)
         wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//div[contains(@class, 'category-posts__list')]")));
-                
+
         WebElement firstArticle = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("(//h3[contains(@class, 'blog-card__title')]/a)[1] | (//div[contains(@class, 'category-posts__list')]//article//a)[1]")));
-        
+                By.xpath("//a[contains(@href, '/wiki/')]")));
+
+        System.out.println("   Найдена статья: " + firstArticle.getText());
+        System.out.println("   href: " + firstArticle.getAttribute("href"));
+
         js.executeScript("arguments[0].scrollIntoView(true);", firstArticle);
         Thread.sleep(500);
         js.executeScript("arguments[0].click();", firstArticle);

@@ -38,11 +38,9 @@ public class ArticlesTests extends BaseTest {
         articlesPage.clickReadMore();
         articlesPage.clickAuthorProfile();
         
-        // Кликаем по первой статье автора
         articlesPage.openFirstArticleInList();
         
-        // Проверяем, что URL изменился и мы внутри раздела статей
-        Assert.assertTrue(driver.getCurrentUrl().contains("/wiki/"), 
+        Assert.assertTrue(driver.getCurrentUrl().contains("/wiki/"),
                 "Не удалось открыть статью автора");
     }
 
