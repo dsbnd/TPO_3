@@ -40,6 +40,30 @@ public class ArticlesPage {
         new Actions(driver).moveToElement(star).click().perform();
     }
 
+    // Метод для открытия случайной статьи со страницы
+    public void openRandomArticle() throws InterruptedException {
+        // Ждем, пока прогрузятся карточки статей
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//h3[contains(@class, 'blog-card__title')]/a | //article//a")
+        ));
+
+        // Собираем все доступные ссылки на статьи в список
+        List<WebElement> articles = driver.findElements(
+                By.xpath("//h3[contains(@class, 'blog-card__title')]/a | //article//a")
+        );
+
+        // Генерируем случайное число от 0 до количества статей на странице
+        int randomIndex = new java.util.Random().nextInt(articles.size());
+        WebElement randomArticle = articles.get(randomIndex);
+
+        System.out.println("Выбрана случайная статья: " + randomArticle.getText());
+
+        // Скроллим к ней и кликаем
+        js.executeScript("arguments[0].scrollIntoView({block: 'center'});", randomArticle);
+        Thread.sleep(500);
+        js.executeScript("arguments[0].click();", randomArticle);
+    }
+
     public String getRatingNotificationText() {
         WebElement notification = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//*[contains(text(), 'Спасибо')]")));

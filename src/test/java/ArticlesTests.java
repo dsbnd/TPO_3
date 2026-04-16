@@ -14,14 +14,15 @@ public class ArticlesTests extends BaseTest {
 
         homePage.open();
         homePage.goToArticles();
-        
-        articlesPage.openSpecificArticle("Футбольные номера: история, значения и легенды игры");
-        
-        // Ставим 4 звезды
+
+        // ВМЕСТО openSpecificArticle вызываем наш новый метод:
+        articlesPage.openRandomArticle();
+
+        // Ставим 3 звезды (можно тоже сделать рандом от 1 до 5, если хочешь!)
         articlesPage.rateArticle(3);
-        
+
         String notification = articlesPage.getRatingNotificationText();
-        Assert.assertTrue(notification.contains("Спасибо"), 
+        Assert.assertTrue(notification.contains("Спасибо"),
                 "Уведомление об оценке не появилось или текст не совпадает!");
     }
 
