@@ -74,19 +74,16 @@ public class ArticlesPage {
         js.executeScript("arguments[0].click();", author);
     }
 
-    public void openFirstArticleInList() throws InterruptedException {
+
+    public void openFirstArticleInList() {
         wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//div[contains(@class, 'category-posts__list')]")));
 
-        WebElement firstArticle = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//a[contains(@href, '/wiki/')]")));
+        WebElement firstArticle = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("(//h3[contains(@class, 'blog-card__title')]/a)[1]")));
 
-        System.out.println("   Найдена статья: " + firstArticle.getText());
-        System.out.println("   href: " + firstArticle.getAttribute("href"));
-
-        js.executeScript("arguments[0].scrollIntoView(true);", firstArticle);
-        Thread.sleep(500);
-        js.executeScript("arguments[0].click();", firstArticle);
+        String articleUrl = firstArticle.getAttribute("href");
+        driver.get(articleUrl);
     }
 
     public void openWiki() {

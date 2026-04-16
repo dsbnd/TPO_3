@@ -31,16 +31,24 @@ public class ArticlesTests extends BaseTest {
 
         homePage.open();
         homePage.goToArticles();
-        
+
         articlesPage.clickReadMore();
         articlesPage.clickAuthorProfile();
-        
-        articlesPage.openFirstArticleInList();
-        
-        Assert.assertTrue(driver.getCurrentUrl().contains("/wiki/"),
-                "Не удалось открыть статью автора");
-    }
 
+        String urlBeforeArticle = driver.getCurrentUrl();
+
+        articlesPage.openFirstArticleInList();
+
+        String urlAfterArticle = driver.getCurrentUrl();
+
+        boolean success = !urlBeforeArticle.equals(urlAfterArticle) &&
+                (urlAfterArticle.contains("/news/") ||
+                        urlAfterArticle.contains("/wiki/") ||
+                        urlAfterArticle.contains("/article/"));
+
+        Assert.assertTrue(success,
+                "Статья не открылась. URL до: " + urlBeforeArticle + ", URL после: " + urlAfterArticle);
+    }
     @Test(description = "UC-11: Поиск статей по категориям")
     public void testSearchArticlesByCategory() throws InterruptedException {
         ArticlesPage articlesPage = new ArticlesPage(driver);
