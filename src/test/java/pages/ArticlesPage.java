@@ -22,7 +22,6 @@ public class ArticlesPage {
         this.js = (JavascriptExecutor) driver;
     }
 
-    // --- Для UC-9 (Оценка) ---
     public void openSpecificArticle(String title) {
         WebElement article = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//a[contains(text(),'" + title + "')]")));
@@ -30,35 +29,28 @@ public class ArticlesPage {
     }
 
     public void rateArticle(int starIndex) throws InterruptedException {
-        // Ищем нужную звезду (например, 4-ю)
         By starLocator = By.cssSelector(".post-rating-footer__star:nth-child(" + starIndex + ")");
         WebElement star = wait.until(ExpectedConditions.presenceOfElementLocated(starLocator));
         
         js.executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", star);
-        Thread.sleep(1000); // Ждем плавную прокрутку
+        Thread.sleep(1000);
         
         new Actions(driver).moveToElement(star).click().perform();
     }
 
-    // Метод для открытия случайной статьи со страницы
     public void openRandomArticle() throws InterruptedException {
-        // Ждем, пока прогрузятся карточки статей
         wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//h3[contains(@class, 'blog-card__title')]/a | //article//a")
         ));
 
-        // Собираем все доступные ссылки на статьи в список
         List<WebElement> articles = driver.findElements(
                 By.xpath("//h3[contains(@class, 'blog-card__title')]/a | //article//a")
         );
-
-        // Генерируем случайное число от 0 до количества статей на странице
         int randomIndex = new java.util.Random().nextInt(articles.size());
         WebElement randomArticle = articles.get(randomIndex);
 
         System.out.println("Выбрана случайная статья: " + randomArticle.getText());
 
-        // Скроллим к ней и кликаем
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", randomArticle);
         Thread.sleep(500);
         js.executeScript("arguments[0].click();", randomArticle);
@@ -70,7 +62,6 @@ public class ArticlesPage {
         return notification.getText();
     }
 
-    // --- Для UC-10 (Автор) ---
     public void clickReadMore() {
         WebElement readMore = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//a[contains(@class, 'hero-news-card__button')]")));
@@ -98,7 +89,6 @@ public class ArticlesPage {
         js.executeScript("arguments[0].click();", firstArticle);
     }
 
-    // --- Для UC-11 (Категории) ---
     public void openWiki() {
         driver.get("https://tiu.ru/wiki/");
     }

@@ -21,7 +21,7 @@ public class NewsPage {
         this.js = (JavascriptExecutor) driver;
     }
 
-    // UC-6: Календарь
+
     public void selectFirstDayOfMonth() {
         WebElement calendarInput = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//input[contains(@class, 'news-calendar__input')]")));
@@ -38,7 +38,6 @@ public class NewsPage {
         new Actions(driver).moveToElement(firstNews).click().perform();
     }
 
-    // UC-5: Бронебойный комментарий
     public void openSpecificNews(String newsTitle) throws InterruptedException {
         WebElement specificNews = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//a[contains(text(),'" + newsTitle + "')]")));
@@ -53,7 +52,6 @@ public class NewsPage {
         js.executeScript("arguments[0].click();", leaveCommentBtn);
         Thread.sleep(2000);
 
-        // Используем гибридный метод, который мы отладили!
         WebElement commentField = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//textarea[@id='comment']")));
         commentField.clear(); commentField.sendKeys(commentText);
 

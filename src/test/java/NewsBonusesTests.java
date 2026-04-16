@@ -31,7 +31,6 @@ public class NewsBonusesTests extends BaseTest {
         driver.switchTo().window(originalWindow);
     }
 
-    //НЕ ПРОХОДИТСЯ
     @Test(description = "UC-5: Работа с комментариями (Неавторизованный пользователь)")
     public void testLeaveCommentAsGuest() throws InterruptedException {
         HomePage homePage = new HomePage(driver);
@@ -73,9 +72,8 @@ public class NewsBonusesTests extends BaseTest {
         homePage.goToBonuses();
         bonusesPage.scrollToFirstBonus();
 
-        // Тестируем Лайк. Кликаем дважды, чтобы убедиться, что он меняется
-        int initialLikes = bonusesPage.clickLike(); // Первый клик может либо поставить, либо снять лайк
-        int newLikes = bonusesPage.clickLike(); // Второй клик вернет или поставит
+        int initialLikes = bonusesPage.clickLike();
+        int newLikes = bonusesPage.clickLike();
         
         Assert.assertTrue(newLikes >= 0, "Счетчик лайков выдал ошибку!");
     }
@@ -89,18 +87,15 @@ public class NewsBonusesTests extends BaseTest {
         homePage.goToBonuses();
         bonusesPage.scrollToFirstBonus();
 
-        // Шаг 1: Проверка промокода
         String promo = bonusesPage.getPromocode();
         Assert.assertFalse(promo.isEmpty(), "Промокод пуст!");
-        bonusesPage.clickCopyPromocode(); // Клик по копированию (просто проверяем, что кнопка нажимается)
+        bonusesPage.clickCopyPromocode();
 
-        // Шаг 2: Проверка редиректа на сайт БК
         String originalWindow = driver.getWindowHandle();
         bonusesPage.clickGetBonus();
 
         Set<String> windows = driver.getWindowHandles();
         if (windows.size() > 1) {
-            // Если открылась новая вкладка
             for (String w : windows) { 
                 if (!w.equals(originalWindow)) driver.switchTo().window(w); 
             }
@@ -108,13 +103,12 @@ public class NewsBonusesTests extends BaseTest {
             driver.close();
             driver.switchTo().window(originalWindow);
         } else {
-            // Если редирект произошел в текущей вкладке
             Assert.assertFalse(driver.getCurrentUrl().contains("tiu.ru"), "Редирект в текущей вкладке не произошел!");
             driver.navigate().back(); // Возвращаемся обратно для чистоты
         }
     }
 
-    @Test(description = "UC-18: Переключение месяца в календаре меняет label")
+    @Test(description = "Переключение месяца в календаре меняет label")
     public void testCalendarMonthSwitch() throws InterruptedException {
         HomePage homePage = new HomePage(driver);
         NewsPage newsPage = new NewsPage(driver);
@@ -132,7 +126,7 @@ public class NewsBonusesTests extends BaseTest {
                 "Label месяца не изменился после клика 'следующий'!");
     }
 
-    @Test(description = "UC-19: Сброс фильтра по дате возвращает полный список новостей")
+    @Test(description = "Сброс фильтра по дате возвращает полный список новостей")
     public void testDateFilterResetRestoresFullList() throws InterruptedException {
         HomePage homePage = new HomePage(driver);
         NewsPage newsPage = new NewsPage(driver);
@@ -153,7 +147,7 @@ public class NewsBonusesTests extends BaseTest {
                 "После сброса фильтра новостей меньше, чем при фильтре! restored=" + restored + " filtered=" + filtered);
     }
 
-    @Test(description = "UC-20: Кнопка 'Нравится' получает активный класс после клика")
+    @Test(description = "Кнопка 'Нравится' получает активный класс после клика")
     public void testLikeButtonGetsActiveClass() throws InterruptedException {
         HomePage homePage = new HomePage(driver);
         BonusesPage bonusesPage = new BonusesPage(driver);
@@ -170,7 +164,7 @@ public class NewsBonusesTests extends BaseTest {
                 "Состояние активности лайка не изменилось после клика!");
     }
 
-    @Test(description = "UC-21: Лайк одного бонуса не меняет счётчик другого")
+    @Test(description = "Лайк одного бонуса не меняет счётчик другого")
     public void testLikesAreIndependentBetweenBonuses() throws InterruptedException {
         HomePage homePage = new HomePage(driver);
         BonusesPage bonusesPage = new BonusesPage(driver);

@@ -8,20 +8,17 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class HomePageTests extends BaseTest { // Наследуем настройки драйвера
+public class HomePageTests extends BaseTest {
 
     @Test(description = "UC-1: Навигация по многоуровневому каталогу к приложению БК")
     public void testCatalog() {
-        // Инициализируем страницы
         HomePage homePage = new HomePage(driver);
         BookmakersPage bookmakersPage = new BookmakersPage(driver);
 
-        // Логика теста читается как книга
         homePage.open();
         homePage.goToBookmakers();
         bookmakersPage.openFirstBookmakerReview();
 
-        // Проверка
         Assert.assertTrue(bookmakersPage.isAppBlockDisplayed(), 
                 "Блок с информацией о приложении конторы не найден!");
     }

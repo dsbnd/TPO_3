@@ -26,7 +26,6 @@ public class BonusesPage {
         Thread.sleep(500);
     }
 
-    // --- Для UC-7 ---
     public int clickLike() throws InterruptedException {
         WebElement likeBtn = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("(//div[contains(@class, 'bonus-card')])[1]//button[contains(@class, 'reaction-btn--like')]")));
         js.executeScript("arguments[0].click();", likeBtn);
@@ -43,7 +42,6 @@ public class BonusesPage {
         return text.isEmpty() ? 0 : Integer.parseInt(text);
     }
 
-    // --- Для UC-8 ---
     public String getPromocode() {
         WebElement input = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("(//div[contains(@class, 'bonus-card')])[1]//input[contains(@class, 'broker-promocode__input')]")));
         return input.getAttribute("value");
